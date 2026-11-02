@@ -1,5 +1,5 @@
 // Lettore offline support: keeps a copy of the app on the phone so it opens without a connection.
-const CACHE = 'lettore-v1';
+const CACHE = 'lettore-v2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -17,7 +17,7 @@ self.addEventListener('fetch', e => {
   if (e.request.mode === 'navigate') {
     // Try the network first so new versions arrive, but fall back to the saved copy quickly.
     e.respondWith(Promise.race([
-      fetch(e.request).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); return r; }),
+      fetch(e.request, { cache: 'no-cache' }).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); return r; }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('slow')), 3000))
     ]).catch(() => caches.match('./index.html')));
     return;
