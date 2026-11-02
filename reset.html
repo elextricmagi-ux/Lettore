@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refresh Lettore</title>
+<style>
+  :root{--bg:#EEF1F5;--ink:#16233F;--muted:#5D6880;--good:#21704F;--bad:#A8322B}
+  @media (prefers-color-scheme: dark){:root{color-scheme:dark;--bg:#0F1522;--ink:#E4E8F0;--muted:#97A1B5;--good:#5CC59A;--bad:#F08A80}}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:grid;place-items:center;min-height:100vh}
+  main{max-width:28em;padding:2rem 1.5rem;text-align:center}
+  h1{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-style:italic;font-weight:normal;font-size:2rem;margin:0 0 1rem}
+  p{line-height:1.55;color:var(--muted)}
+  #status{color:var(--ink);font-size:1.05rem}
+  .ok{color:var(--good)} .err{color:var(--bad)}
+  a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+  <h1>Lettore</h1>
+  <p id="status">Refreshing the app…</p>
+  <p>This only replaces the saved copy of the app. Your books, words and bookmarks stay on this device.</p>
+</main>
+<script>
+(async () => {
+  const status = document.getElementById('status');
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    // fetch the newest app straight from GitHub so the next screen isn't an old browser copy
+    await fetch('./index.html', { cache: 'reload' }).catch(() => {});
+    await fetch('./', { cache: 'reload' }).catch(() => {});
+    status.className = 'ok';
+    status.textContent = 'Done. Opening the newest version…';
+    setTimeout(() => location.replace('./?fresh=' + Date.now()), 900);
+  } catch (e) {
+    status.className = 'err';
+    status.innerHTML = 'Something went wrong (' + (e && e.message || e) + '). <a href="./">Open Lettore</a>';
+  }
+})();
+</script>
+</body>
+</html>
